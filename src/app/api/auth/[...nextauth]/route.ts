@@ -1,7 +1,8 @@
-import NextAuth from "next-auth";
+import NextAuth, { Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import AppleProvider from "next-auth/providers/apple";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -44,8 +45,9 @@ const handler = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
-      console.log("JWT === ", token, user, account);
+    async jwt(params) {
+      const { token, user, account } = params;
+      console.log("JWT === ", params);
       if (account && user) {
         return {
           ...token,
@@ -55,9 +57,12 @@ const handler = NextAuth({
       }
       return token;
     },
-    async session({ session }) {
-      console.log("SESSION === ", session);
-      return session;
+    async session(params) {
+      const { session } = params;
+      console.log("--------");
+      console.log("SESSION === ", params);
+      console.log("--------");
+      return { ...session, jwt: encryptSession(session) };
     },
   },
   pages: {
@@ -65,5 +70,33 @@ const handler = NextAuth({
   },
   secret: process.env.NEXTAUTH_SECRET,
 });
+
+function encryptSession(session: Session): string {
+  const text = JSON.stringify(session);
+  const algorithm = "aes-256-cbc";
+  console.log("process.env.NEXTAUTH_SECRET", process.env.NEXTAUTH_SECRET);
+  const key = Buffer.from(process.env.NEXTAUTH_SECRET!, "utf-8").slice(0, 32);
+  const iv = randomBytes(16);
+  const cipher = createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return `${iv.toString("hex")}:${encrypted}`;
+}
+
+function decryptSession(text: string): Session | null {
+  try {
+    const algorithm = "aes-256-cbc";
+    const key = Buffer.from(process.env.NEXTAUTH_SECRET!, "utf-8").slice(0, 32);
+    const [ivHex, encryptedText] = text.split(":");
+    const iv = Buffer.from(ivHex, "hex");
+    const decipher = createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encryptedText, "hex", "utf8");
+    decrypted += decipher.final("utf8");
+    return JSON.parse(decrypted);
+  } catch (e) {
+    console.log("--- decryptSession error", e);
+    return null;
+  }
+}
 
 export { handler as GET, handler as POST };

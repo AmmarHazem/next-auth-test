@@ -22,7 +22,7 @@ export default function LoginPage() {
       if (result?.error) {
         console.log("Invalid email or password");
       } else {
-        window.location.href = "/login";
+        window.location.href = "/";
       }
     } finally {
       setIsLoading(false);
@@ -30,11 +30,11 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    signIn("google", { callbackUrl: "/login" });
+    signIn("google", { callbackUrl: "/" });
   };
 
   const handleAppleLogin = () => {
-    signIn("apple", { callbackUrl: "/login" });
+    signIn("apple", { callbackUrl: "/" });
   };
 
   return (
