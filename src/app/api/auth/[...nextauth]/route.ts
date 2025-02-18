@@ -74,7 +74,6 @@ const handler = NextAuth({
 function encryptSession(session: Session): string {
   const text = JSON.stringify(session);
   const algorithm = "aes-256-cbc";
-  console.log("process.env.NEXTAUTH_SECRET", process.env.NEXTAUTH_SECRET);
   const key = Buffer.from(process.env.NEXTAUTH_SECRET!, "utf-8").slice(0, 32);
   const iv = randomBytes(16);
   const cipher = createCipheriv(algorithm, key, iv);
