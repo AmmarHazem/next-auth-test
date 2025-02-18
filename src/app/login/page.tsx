@@ -22,7 +22,7 @@ export default function LoginPage() {
       if (result?.error) {
         console.log("Invalid email or password");
       } else {
-        window.location.href = "/";
+        window.location.href = "/login";
       }
     } finally {
       setIsLoading(false);
