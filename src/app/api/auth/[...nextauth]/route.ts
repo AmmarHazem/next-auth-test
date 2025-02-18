@@ -2,7 +2,7 @@ import NextAuth, { Session } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import AppleProvider from "next-auth/providers/apple";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { createCipheriv, randomBytes } from "crypto";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -83,20 +83,20 @@ function encryptSession(session: Session): string {
   return `${iv.toString("hex")}:${encrypted}`;
 }
 
-function decryptSession(text: string): Session | null {
-  try {
-    const algorithm = "aes-256-cbc";
-    const key = Buffer.from(process.env.NEXTAUTH_SECRET!, "utf-8").slice(0, 32);
-    const [ivHex, encryptedText] = text.split(":");
-    const iv = Buffer.from(ivHex, "hex");
-    const decipher = createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encryptedText, "hex", "utf8");
-    decrypted += decipher.final("utf8");
-    return JSON.parse(decrypted);
-  } catch (e) {
-    console.log("--- decryptSession error", e);
-    return null;
-  }
-}
+// function decryptSession(text: string): Session | null {
+//   try {
+//     const algorithm = "aes-256-cbc";
+//     const key = Buffer.from(process.env.NEXTAUTH_SECRET!, "utf-8").slice(0, 32);
+//     const [ivHex, encryptedText] = text.split(":");
+//     const iv = Buffer.from(ivHex, "hex");
+//     const decipher = createDecipheriv(algorithm, key, iv);
+//     let decrypted = decipher.update(encryptedText, "hex", "utf8");
+//     decrypted += decipher.final("utf8");
+//     return JSON.parse(decrypted);
+//   } catch (e) {
+//     console.log("--- decryptSession error", e);
+//     return null;
+//   }
+// }
 
 export { handler as GET, handler as POST };
